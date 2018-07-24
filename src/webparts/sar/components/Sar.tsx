@@ -2,14 +2,40 @@ import * as React from 'react';
 import styles from './Sar.module.scss';
 import { ISarProps } from './ISarProps';
 import { escape } from '@microsoft/sp-lodash-subset';
+import { SPComponentLoader } from '@microsoft/sp-loader';
 
-/* Pivo Office Fabric */
+/* Pivot Office Fabric */
 import { Label } from 'office-ui-fabric-react/lib/Label';
 import { Icon } from 'office-ui-fabric-react/lib/Icon';
 import { PivotItem, IPivotItemProps, Pivot, TextField} from 'office-ui-fabric-react';
 
-export default class Sar extends React.Component<ISarProps, {}> {
+import axios, { AxiosRequestConfig, AxiosPromise, AxiosResponse } from 'axios';
+
+export interface estados {
+  caca: Array<any>;
+}
+export default class Sar extends React.Component<ISarProps, estados> {
+  
+  constructor(){
+    super();
+    SPComponentLoader.loadCss('//dev.office.com/fabric-js/css/fabric.components.min.css');
+    this.state = {
+      caca : []
+    }
+  }
+  
+  public componentDidMount(){
+    this.getElements().then((response) => {
+      console.log(response.data);
+      this.setState({
+        caca : response.data.value
+      });
+    }).catch((err)=>{
+        console.log(err);
+    });
+  }
   public render(): React.ReactElement<ISarProps> {
+    //this.getElements();
     return (
       <div>
         <Pivot>
@@ -19,18 +45,17 @@ export default class Sar extends React.Component<ISarProps, {}> {
               <thead>
                 <tr>
                   <th>Location</th>
-                  <th>Modified</th>
-                  <th>Type</th>
-                  <th>File Name</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>Location</td>
-                  <td>Modified</td>
-                  <td>Type</td>
-                  <td>File Name</td>
-                </tr>
+                {
+                  this.state.caca.map((value)=>{
+
+                    return <tr>
+                            <td>{value.Nombre}</td>
+                          </tr>
+                  })
+                }
               </tbody>
             </table>
           </PivotItem>
@@ -62,5 +87,40 @@ export default class Sar extends React.Component<ISarProps, {}> {
         <Icon iconName="Airplane" style={{ color: 'red' }} />
       </span>
     );
+  }
+  private addElement(){
+    const tablestorageUrl =  'https://storagelatintest.table.core.windows.net/Persona?sv=2018-03-28&si=Persona-164CE6B1EC9&tn=persona&sig=8dyeUpUnT%2F%2B9XvpEoEjfqepP2yMv6Uw%2F772kLwZg2UM%3D';
+    axios.post(tablestorageUrl, {
+      "PartitionKey": "123534",
+    "RowKey": "12345",
+    "Nombre": "asdasdxasd"
+            
+    }, {
+      url: tablestorageUrl,
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }).then(function (response) {
+      console.log(response);
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+  
+    
+  }
+  private getElements()  {
+
+    this.addElement();
+
+    const tablestorageUrl =  'https://storagelatintest.table.core.windows.net/Persona?sv=2018-03-28&si=Persona-164CE6B1EC9&tn=persona&sig=8dyeUpUnT%2F%2B9XvpEoEjfqepP2yMv6Uw%2F772kLwZg2UM%3D';
+    
+
+    
+    return axios.get(tablestorageUrl, {
+      headers: {
+        Accepts: 'application/json'
+      }})
   }
 }
