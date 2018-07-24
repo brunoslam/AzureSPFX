@@ -1,0 +1,27 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "sample-azure-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/sampleAzure/SampleAzureWebPart.js",
+          "manifest": "./src/webparts/sampleAzure/SampleAzureWebPart.manifest.json"
+        }
+      ]
+    },
+    "sar-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/sar/SarWebPart.js",
+          "manifest": "./src/webparts/sar/SarWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "SampleAzureWebPartStrings": "lib/webparts/sampleAzure/loc/{locale}.js",
+    "SarWebPartStrings": "lib/webparts/sar/loc/{locale}.js"
+  }
+}
