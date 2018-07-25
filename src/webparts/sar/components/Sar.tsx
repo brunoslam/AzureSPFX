@@ -10,7 +10,9 @@ import { Icon } from 'office-ui-fabric-react/lib/Icon';
 import { PivotItem, IPivotItemProps, Pivot, TextField} from 'office-ui-fabric-react';
 
 import axios, { AxiosRequestConfig, AxiosPromise, AxiosResponse } from 'axios';
-
+//var azure = require('azure-storage');
+import * as azure from 'azure-storage/typings/azure-storage/azure-storage';
+//import azurestorage = require('azure-storage/typings/azure-storage');
 export interface estados {
   caca: Array<any>;
 }
@@ -89,6 +91,27 @@ export default class Sar extends React.Component<ISarProps, estados> {
     );
   }
   private addElement(){
+    var retryOperations = new azure.ExponentialRetryPolicyFilter();
+    //var tableSvc = azure.createTableService().withFilter(retryOperations);
+    var tableSvc = azure.createTableService("", "")
+    var entGen = azure.TableUtilities.entityGenerator;
+    var task = {
+      PartitionKey: entGen.String('Persona'),
+      RowKey: entGen.String('666'),
+      description: entGen.String('take out the trash'),
+      dueDate: entGen.DateTime(new Date(Date.UTC(2015, 6, 20))),
+      Nombre: "asdasdasd"
+    };
+    var batch = new azure.TableBatch();
+
+    batch.insertEntity(task, {echoContent: true});
+    tableSvc.executeBatch('mytable', batch, function (error, result, response) {
+      if(!error) {
+        // Batch completed
+      }
+    });
+
+/*
     const tablestorageUrl =  'https://storagelatintest.table.core.windows.net/Persona?sv=2018-03-28&si=Persona-164CE6B1EC9&tn=persona&sig=8dyeUpUnT%2F%2B9XvpEoEjfqepP2yMv6Uw%2F772kLwZg2UM%3D';
     axios.post(tablestorageUrl, {
       "PartitionKey": "123534",
@@ -107,7 +130,7 @@ export default class Sar extends React.Component<ISarProps, estados> {
     .catch(function (error) {
       console.log(error);
     });
-  
+  */
     
   }
   private getElements()  {
