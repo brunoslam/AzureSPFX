@@ -18,8 +18,6 @@ var urlSharedKey = 'https://storagelatintest.table.core.windows.net/Persona?st=2
 var urlAzureFunction = "https://miindicadorapi.azurewebsites.net/api/HttpTriggerJS1?code=HNrWahearYSovl/hZorLwdCmav1uz0eswO5BamXcYvsMHq15Kh5ulg==";
 import 'office-ui-fabric/dist/components/DatePicker/DatePicker.min.css';
 import 'office-ui-fabric/dist/components/DatePicker/DatePicker.min.css';
-import 'office-ui-fabric-core/dist/css/fabric.min.css';
-require("office-ui-fabric-core/dist/css/fabric.min.css");
 import { initializeIcons } from 'office-ui-fabric-react/lib/Icons'
 export interface estados {
   resultados: Array<any>;
@@ -31,7 +29,6 @@ export default class Sar extends React.Component<ISarProps, estados> {
   constructor(){
     super();
     SPComponentLoader.loadCss('//dev.office.com/fabric-js/css/fabric.components.min.css');
-    SPComponentLoader.loadCss('https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/6.0.0/css/fabric-6.0.0.scoped.css');
 
     this.state = {
       resultados : [],
@@ -46,6 +43,7 @@ export default class Sar extends React.Component<ISarProps, estados> {
       this.setState({
         resultados : response.data.value
       });
+      this.addElement = this.addElement.bind(this);
     }).catch((err)=>{
         console.log(err);
     });
@@ -58,16 +56,15 @@ export default class Sar extends React.Component<ISarProps, estados> {
     
   }
   public render(): React.ReactElement<ISarProps> {
-    //this.getElements();
     return (
       <div>
-        <Pivot>
+        <Pivot >
           <PivotItem linkText="Ver elementos" itemCount={this.state.resultados.length}  itemIcon="Emoji2">
             <Label>Total Asistentes Charla SPFX:  {this.state.resultados.length}</Label>
             <table className="ms-Table">
               <thead>
                 <tr>
-                  <th>ID</th>
+                  <th>#</th>
                   <th>Nombre</th>
                   <th>Comuna</th>
                   <th>Fecha confirmación</th>
@@ -77,15 +74,15 @@ export default class Sar extends React.Component<ISarProps, estados> {
               </thead>
               <tbody>
                 {
-                  this.state.resultados.map((value)=>{
+                  this.state.resultados.map((value, key )=>{
 
                     return <tr>
-                            <td>{value.PartitionKey}</td>
+                            <td>{(key+1)}</td>
                             <td>{value.Nombre}</td>
                             <td>{value.Comuna}</td>
-                            <td>{value.FechaConfirmacion}</td>
+                            <td>{ this._formatDate(value.FechaConfirmacion)}</td>
                             <td>{value.Telefono}</td>
-                            <td>{value.Confirma ? <i className="ms-Icon ms-Icon--ActivateOrders" aria-hidden="true"></i> : <i className="ms-Icon ms-Icon--EntryDecline" aria-hidden="true"></i>}</td>
+                            <td>{value.Confirma ? <i className="ms-Icon ms-Icon--Emoji" aria-hidden="true"></i> : <i className="ms-Icon ms-Icon--EmojiDisappointed" aria-hidden="true"></i>}</td>
                           </tr>
                   })
                 }
@@ -117,7 +114,7 @@ export default class Sar extends React.Component<ISarProps, estados> {
                 offText="No"
                 id="chkAsistencia"
               />
-              <PrimaryButton onClick={this.addElement}>Submit</PrimaryButton>
+              <PrimaryButton onClick={this.addElement}>Enviar confirmación <i className="ms-Icon ms-Icon--Emoji" aria-hidden="true"></i></PrimaryButton>
             </div>
           </PivotItem>
           <PivotItem linkText="Azure API" itemIcon="Globe">
@@ -171,18 +168,23 @@ export default class Sar extends React.Component<ISarProps, estados> {
     );
   }
   private _onFormatDate = (date: Date): string => {
+    debugger;
     this.setState({fechaSeleccionada : date});
     return date.getDate() + '/' + (date.getMonth() + 1) + '/' + (date.getFullYear() % 100);
   };
+
+  private _formatDate(date){
+    var newDate = date == "" ||  date == null ? "" : new Date(date).toLocaleDateString();
+    return newDate;
+  }
   private addElement(){
     
     var nombre = (document.getElementById("txtNombre")  as HTMLInputElement).value;
     var comuna = (document.getElementById("txtComuna")  as HTMLInputElement).value;
-    var fechaConfirmacion = (document.querySelector(".txtFechaConfirmacion input[type=text]")  as HTMLInputElement).value;
+    //var fechaConfirmacion = (document.querySelector(".txtFechaConfirmacion input[type=text]")  as HTMLInputElement).value;
+    var fechaConfirmacion = this.state.fechaSeleccionada;
     var telefono = (document.getElementById("txtTelefono")  as HTMLInputElement).value;
-    var confirmacion = (document.getElementById("chkAsistencia")  as HTMLInputElement).getAttribute("aria-pressed");
-    debugger;
-    //primer metodo
+    var confirmacion = (document.getElementById("chkAsistencia")  as HTMLInputElement).getAttribute("aria-pressed") == "true" ? true : false;
     const tablestorageUrl = urlSharedKey;
     axios.post(tablestorageUrl, {
       "PartitionKey": new Date(),
@@ -220,7 +222,6 @@ export default class Sar extends React.Component<ISarProps, estados> {
   }
 
   private getAzureFunction():Promise<any>{
-
     return new Promise<any>((resolve, reject) => {
       const requestHeaders: Headers = new Headers();
       requestHeaders.append("Content-type", "application/jsonp");
@@ -243,5 +244,4 @@ export default class Sar extends React.Component<ISarProps, estados> {
 
    
   }
-
 }
