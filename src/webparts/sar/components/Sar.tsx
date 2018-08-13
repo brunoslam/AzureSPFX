@@ -7,35 +7,40 @@ import { HttpClient, SPHttpClient, HttpClientConfiguration, HttpClientResponse, 
 /* Pivot Office Fabric */
 import { Label } from 'office-ui-fabric-react/lib/Label';
 import { Icon } from 'office-ui-fabric-react/lib/Icon';
+import { Toggle } from 'office-ui-fabric-react/lib/Toggle';
 import { PivotItem, IPivotItemProps, Pivot, TextField} from 'office-ui-fabric-react';
 import { DatePicker, DayOfWeek, IDatePickerStrings } from 'office-ui-fabric-react/lib/DatePicker';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 import axios, { AxiosRequestConfig, AxiosPromise, AxiosResponse } from 'axios';
 
 
-//import * as http from 'http';
-//var fs                = require('fs'),storageManagement = require('azure-asm-storage');
-import  * as azure  from 'fast-azure-storage';
 var urlSharedKey = 'https://storagelatintest.table.core.windows.net/Persona?st=2018-08-05T22%3A14%3A19Z&se=2018-08-20T22%3A14%3A00Z&sp=raud&sv=2018-03-28&tn=persona&sig=DxU3OGGkO092uET0JPt%2FWdZRmo2Cp3%2FSyCjXcLpP3yY%3D';
 var urlAzureFunction = "https://miindicadorapi.azurewebsites.net/api/HttpTriggerJS1?code=HNrWahearYSovl/hZorLwdCmav1uz0eswO5BamXcYvsMHq15Kh5ulg==";
 import 'office-ui-fabric/dist/components/DatePicker/DatePicker.min.css';
-require("office-ui-fabric/dist/components/DatePicker/DatePicker.min.css")
+import 'office-ui-fabric/dist/components/DatePicker/DatePicker.min.css';
+import 'office-ui-fabric-core/dist/css/fabric.min.css';
+require("office-ui-fabric-core/dist/css/fabric.min.css");
+import { initializeIcons } from 'office-ui-fabric-react/lib/Icons'
 export interface estados {
   resultados: Array<any>;
   indicadoresDelDia : any;
+  fechaSeleccionada: any;
 }
 export default class Sar extends React.Component<ISarProps, estados> {
   
   constructor(){
     super();
     SPComponentLoader.loadCss('//dev.office.com/fabric-js/css/fabric.components.min.css');
+    SPComponentLoader.loadCss('https://static2.sharepointonline.com/files/fabric/office-ui-fabric-core/6.0.0/css/fabric-6.0.0.scoped.css');
+
     this.state = {
       resultados : [],
-      indicadoresDelDia: null
+      indicadoresDelDia: null,
+      fechaSeleccionada: null
     }
   }
   
-  public componentDidMount(){
+  public componentWillMount(){
     this.getElements().then((response) => {
       console.log(response.data);
       this.setState({
@@ -67,6 +72,7 @@ export default class Sar extends React.Component<ISarProps, estados> {
                   <th>Comuna</th>
                   <th>Fecha confirmación</th>
                   <th>Teléfono</th>
+                  <th>Confirma</th>
                 </tr>
               </thead>
               <tbody>
@@ -79,7 +85,7 @@ export default class Sar extends React.Component<ISarProps, estados> {
                             <td>{value.Comuna}</td>
                             <td>{value.FechaConfirmacion}</td>
                             <td>{value.Telefono}</td>
-                            
+                            <td>{value.Confirma ? <i className="ms-Icon ms-Icon--ActivateOrders" aria-hidden="true"></i> : <i className="ms-Icon ms-Icon--EntryDecline" aria-hidden="true"></i>}</td>
                           </tr>
                   })
                 }
@@ -89,8 +95,8 @@ export default class Sar extends React.Component<ISarProps, estados> {
           <PivotItem linkText="Insertar elementos" itemIcon="Recent">
             <Label>Pivot #2</Label>
             <div>
-              <TextField label="Nombre:" name="Nombre" />
-              <TextField label="Comuna:" name="Comuna" />
+              <TextField label="Nombre:" name="Nombre" id="txtNombre" />
+              <TextField label="Comuna:" name="Comuna" id="txtComuna"/>
               <DatePicker
                 //firstDayOfWeek={firstDayOfWeek}
                 //strings={DayPickerStrings}
@@ -100,13 +106,22 @@ export default class Sar extends React.Component<ISarProps, estados> {
                 onAfterMenuDismiss={() => console.log('onAfterMenuDismiss called')}
                 // tslint:enable:jsx-no-lambda
                 label="Fecha confirmación:"
+                className="txtFechaConfirmacion"
+                formatDate={this._onFormatDate}
               />
-              <TextField label="Teléfono:" name="Telefono" />
+              <TextField label="Teléfono:" name="Telefono" id="txtTelefono"/>
+              <Toggle
+                defaultChecked={false}
+                label="Confirma asistencia:"
+                onText="Si"
+                offText="No"
+                id="chkAsistencia"
+              />
               <PrimaryButton onClick={this.addElement}>Submit</PrimaryButton>
             </div>
           </PivotItem>
           <PivotItem linkText="Azure API" itemIcon="Globe">
-            <Label>Pivot #3</Label>
+            <Label>Fecha información: {this.state.indicadoresDelDia == null ? "" : this.state.indicadoresDelDia.fecha }</Label>
             <table className="ms-Table">
               <thead>
                 <tr>
@@ -114,24 +129,34 @@ export default class Sar extends React.Component<ISarProps, estados> {
                   <th>Valor CLP</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td>{this.state.indicadoresDelDia != null ? this.state.indicadoresDelDia.dolar.nombre : ""}</td>
-                  <td>{this.state.indicadoresDelDia != null ? this.state.indicadoresDelDia.dolar.valor: ""}</td>
-                </tr>
-              </tbody>
+              {(() => {
+                if(this.state.indicadoresDelDia){
+                  return <tbody>
+                          <tr>
+                            <td>{ this.state.indicadoresDelDia.dolar.nombre }</td>
+                            <td>{ this.state.indicadoresDelDia.dolar.valor }</td>
+                          </tr>
+                          <tr>
+                            <td>{ this.state.indicadoresDelDia.euro.nombre }</td>
+                            <td>{ this.state.indicadoresDelDia.euro.valor }</td>
+                          </tr>
+                          <tr>
+                            <td>{ this.state.indicadoresDelDia.bitcoin.nombre }</td>
+                            <td>{ (this.state.indicadoresDelDia.bitcoin.valor * this.state.indicadoresDelDia.dolar.valor) }</td>
+                          </tr>
+                          <tr>
+                            <td>{ this.state.indicadoresDelDia.uf.nombre }</td>
+                            <td>{ this.state.indicadoresDelDia.uf.valor }</td>
+                          </tr>
+                          <tr>
+                            <td>{ this.state.indicadoresDelDia.utm.nombre }</td>
+                            <td>{ this.state.indicadoresDelDia.utm.valor }</td>
+                          </tr>
+                        </tbody>
+                }
+              })()}
+              
             </table>
-          </PivotItem>
-          <PivotItem linkText="Shared with me" itemIcon="Ringer" itemCount={1}>
-            <Label>Pivot #4</Label>
-          </PivotItem>
-          <PivotItem
-            linkText="Customized Rendering"
-            itemIcon="Globe"
-            itemCount={10}
-            onRenderItemLink={this._customRenderer}
-          >
-            <Label>Customized Rendering</Label>
           </PivotItem>
         </Pivot>
       </div>
@@ -145,54 +170,28 @@ export default class Sar extends React.Component<ISarProps, estados> {
       </span>
     );
   }
+  private _onFormatDate = (date: Date): string => {
+    this.setState({fechaSeleccionada : date});
+    return date.getDate() + '/' + (date.getMonth() + 1) + '/' + (date.getFullYear() % 100);
+  };
   private addElement(){
-    var options = {
-      accountId:          '...',
-      accessKey:          '...'
-    };
-    /*var queue = new azure.Queue(options);
-    var table = new azure.Table(options);
-    var blob  = new azure.Blob(options);*/
-    /*
-    msRestAzure.interactiveLogin(function(err, credentials) {
-      var client = new storageManagementClient.StorageManagementClient(credentials, 'your-subscription-id');
-      client.storageAccounts.list(function(err, result) {
-        if (err) console.log(err);
-        console.log(result);
-      });
-     });*/
-    /*
-    segundo metodo
-   var retryOperations = new azure.ExponentialRetryPolicyFilter();
-    //var tableSvc = azure.createTableService().withFilter(retryOperations);
-    var tableSvc = azure.createTableService("", "")
-    var entGen = azure.TableUtilities.entityGenerator;
-    var task = {
-      PartitionKey: entGen.String('Persona'),
-      RowKey: entGen.String('666'),
-      description: entGen.String('take out the trash'),
-      dueDate: entGen.DateTime(new Date(Date.UTC(2015, 6, 20))),
-      Nombre: "asdasdasd"
-    };
-    var batch = new azure.TableBatch();
-
-    batch.insertEntity(task, {echoContent: true});
-    tableSvc.executeBatch('mytable', batch, function (error, result, response) {
-      if(!error) {
-        // Batch completed
-      }
-    });
-*/
     
+    var nombre = (document.getElementById("txtNombre")  as HTMLInputElement).value;
+    var comuna = (document.getElementById("txtComuna")  as HTMLInputElement).value;
+    var fechaConfirmacion = (document.querySelector(".txtFechaConfirmacion input[type=text]")  as HTMLInputElement).value;
+    var telefono = (document.getElementById("txtTelefono")  as HTMLInputElement).value;
+    var confirmacion = (document.getElementById("chkAsistencia")  as HTMLInputElement).getAttribute("aria-pressed");
+    debugger;
     //primer metodo
     const tablestorageUrl = urlSharedKey;
     axios.post(tablestorageUrl, {
       "PartitionKey": new Date(),
       "RowKey": new Date(),
-      "Nombre": "asdasdxasd",
-      "Comuna": "asdasdxasd",
-      "FechaConfirmacion": "2018-08-06T19:15:12.033Z",
-      "Telefono": "87654321"
+      "Nombre": nombre,
+      "Comuna": comuna,
+      "FechaConfirmacion": fechaConfirmacion,
+      "Telefono": telefono,
+      "Confirma" : confirmacion
             
     }, {
       url: tablestorageUrl,

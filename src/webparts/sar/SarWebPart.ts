@@ -16,8 +16,6 @@ export interface ISarWebPartProps {
   context_: any
 
 }
-import * as $ from 'jquery';
-import Axios from 'axios';
 
 export default class SarWebPart extends BaseClientSideWebPart<ISarWebPartProps> {
   constructor(){
