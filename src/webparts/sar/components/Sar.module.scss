@@ -1,5 +1,6 @@
 @import '~@microsoft/sp-office-ui-fabric-core/dist/sass/SPFabricCore.scss';
 @import '~office-ui-fabric-core/dist/sass/Fabric.scss';
+
 .sar {
   .container {
     max-width: 700px;
@@ -74,4 +75,5 @@
   .ms-Table td:nth-child(6) {
     text-align: center;
   }
+  
 }
