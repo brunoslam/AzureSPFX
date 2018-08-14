@@ -9,6 +9,9 @@ import { Label } from 'office-ui-fabric-react/lib/Label';
 import { Icon } from 'office-ui-fabric-react/lib/Icon';
 import { Toggle } from 'office-ui-fabric-react/lib/Toggle';
 import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/Dialog';
+import { Callout } from 'office-ui-fabric-react/lib/Callout';
+import { Link } from 'office-ui-fabric-react/lib/Link';
+import { createRef } from 'office-ui-fabric-react/lib/Utilities';
 import { PivotItem, IPivotItemProps, Pivot, TextField } from 'office-ui-fabric-react';
 import { DatePicker, DayOfWeek, IDatePickerStrings } from 'office-ui-fabric-react/lib/DatePicker';
 import { PrimaryButton } from 'office-ui-fabric-react/lib/Button';
@@ -22,8 +25,10 @@ export interface estados {
   indicadoresDelDia: any;
   fechaSeleccionada: any;
   hideDialog: boolean;
+  isCalloutVisible: boolean;
 }
 export default class Sar extends React.Component<ISarProps, estados> {
+  private _menuButtonElement = createRef<HTMLElement>();
 
   constructor() {
     super();
@@ -33,7 +38,8 @@ export default class Sar extends React.Component<ISarProps, estados> {
       resultados: [],
       indicadoresDelDia: null,
       fechaSeleccionada: null,
-      hideDialog: true
+      hideDialog: true,
+      isCalloutVisible: true
     }
   }
 
@@ -48,7 +54,7 @@ export default class Sar extends React.Component<ISarProps, estados> {
     return (
       <div>
         <Pivot >
-          <PivotItem linkText="Ver elementos" itemCount={this.state.resultados.length} itemIcon="Emoji2">
+          <PivotItem linkText="Ver elementos - Azure" itemCount={this.state.resultados.length} itemIcon="Emoji2">
             <Label>Total Asistentes Charla SPFX:  {this.state.resultados.length}</Label>
             <table className="ms-Table">
               <thead>
@@ -65,7 +71,7 @@ export default class Sar extends React.Component<ISarProps, estados> {
                 {
                   this.state.resultados.map((value, key) => {
 
-                    return <tr>
+                    return <tr key={key}>
                       <td>{(key + 1)}</td>
                       <td>{value.Nombre}</td>
                       <td>{value.Comuna}</td>
@@ -102,6 +108,37 @@ export default class Sar extends React.Component<ISarProps, estados> {
                 id="chkAsistencia"
               />
               <PrimaryButton className="ms-fontColor-white" onClick={this.addElementAzureTable}>Enviar confirmación <i className="ms-Icon ms-Icon--Emoji" aria-hidden="true"></i></PrimaryButton>
+              <Callout
+                className="ms-CalloutExample-callout"
+                ariaLabelledBy={'callout-label-1'}
+                ariaDescribedBy={'callout-description-1'}
+                role={'alertdialog'}
+                gapSpace={0}
+                target={this._menuButtonElement.value}
+                onDismiss={this._onCalloutDismiss}
+                setInitialFocus={true}
+                hidden={!this.state.isCalloutVisible}
+              >
+                <div className="ms-CalloutExample-header">
+                  <p className="ms-CalloutExample-title" id={'callout-label-1'}>
+                    All of your favorite people
+                    </p>
+                </div>
+                <div className="ms-CalloutExample-inner">
+                  <div className="ms-CalloutExample-content">
+                    <p className="ms-CalloutExample-subText" id={'callout-description-1'}>
+                      Message body is optional. If help documentation is available, consider adding a link to learn more at
+                      the bottom.
+                      </p>
+                  </div>
+                  <div className="ms-CalloutExample-actions">
+                    <Link className="ms-CalloutExample-link" href="http://microsoft.com">
+                      Go to microsoft
+                      </Link>
+                  </div>
+                </div>
+              </Callout>
+
             </div>
           </PivotItem>
           <PivotItem linkText="Azure API" itemIcon="Globe">
@@ -143,26 +180,22 @@ export default class Sar extends React.Component<ISarProps, estados> {
             </table>
           </PivotItem>
         </Pivot>
-        <Dialog
-          hidden={this.state.hideDialog}
-          onDismiss={this._closeDialog}
-          dialogContentProps={{
-            type: DialogType.normal,
-            title: 'Registro exitoso',
-            subText:
-              'Se confirmado correctamente al usuario.'
-          }}
-          modalProps={{
-            titleAriaId: 'myLabelId',
-            subtitleAriaId: 'mySubTextId',
-            isBlocking: false,
-            containerClassName: 'ms-dialogMainOverride'
-          }}
-        >
-        </Dialog>
+
       </div>
     );
   }
+
+  private _onShowMenuClicked = (): void => {
+    this.setState({
+      isCalloutVisible: !this.state.isCalloutVisible
+    });
+  };
+
+  private _onCalloutDismiss = (): void => {
+    this.setState({
+      isCalloutVisible: false
+    });
+  };
   private _showDialog = (): void => {
     this.setState({ hideDialog: false });
   };
@@ -178,9 +211,9 @@ export default class Sar extends React.Component<ISarProps, estados> {
     return newDate;
   }
 
-  
+
   private getElementsAzureTable() {
-    this.getAzureFunction();
+
     const tablestorageUrl = urlSharedKey;
     return axios.get(tablestorageUrl, {
       headers: {
@@ -191,7 +224,7 @@ export default class Sar extends React.Component<ISarProps, estados> {
       this.setState({
         resultados: response.data.value
       });
-     
+
     }).catch((err) => {
       console.log(err);
     });
@@ -222,7 +255,7 @@ export default class Sar extends React.Component<ISarProps, estados> {
         }
       }).then(function (response) {
         ctx._showDialog();
-        ctx.getAzureFunction();
+        ctx.getElementsAzureTable();
         console.log(response);
       })
       .catch(function (error) {
@@ -255,4 +288,5 @@ export default class Sar extends React.Component<ISarProps, estados> {
       });
     });
   }
+
 }
